@@ -1,0 +1,14 @@
+# generated files
+bin/
+gen/
+.project
+.cache
+.settings
+.worksheet
+
+tests/bin/
+tests/gen/
+tests/.project
+tests/.classpath
+
+# leaving eclipse project files in for now
