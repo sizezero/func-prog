@@ -66,4 +66,19 @@ object Main extends App {
     }
   
   p(map2(Some(1), Some(2))(_ + _))
+  
+  // ex 4.4
+  
+  def sequence[A](a: List[Option[A]]): Option[List[A]] = {
+    if (a.exists(_ == None)) None
+    else Some(a.map{ o => o match { case Some(x) => x } })
+  }
+  p(sequence(List(Some(1),Some(2))))
+  p(sequence(List(Some(1),None)))
+  
+  // ex 4.5
+  
+  //def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = {
+  //  def loop(a: List[A]): Option
+  //}
 }
