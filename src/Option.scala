@@ -78,7 +78,89 @@ object Main extends App {
   
   // ex 4.5
   
-  //def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = {
-  //  def loop(a: List[A]): Option
-  //}
+  def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = a match {
+    case Nil => Some(Nil)
+    case ha :: ta => traverse(ta)(f) match {
+      case None => None
+      case Some(tb) => f(ha) match {
+        case None => None
+        case Some(b) => Some(b :: tb)
+      }
+    }
+  }
+  
+  def Try[A](a: => A): Option[A] =
+    try Some(a)
+    catch { case e: Exception => None}
+  
+  p( traverse(List("1", "2", "3"))(s => Try(s.toInt)) )
+  p( traverse(List("1", "foo", "3"))(s => Try(s.toInt)) )
+  
+  def sequence2[A](a: List[Option[A]]): Option[List[A]] = traverse(a)(x => x)
+  p(sequence2(List(Some(1),Some(2))))
+  p(sequence2(List(Some(1),None)))
+  
+  // ex 4.6
+  
+  trait Either[+E, +A] {
+    
+    def map[B](f: A => B): Either[E, B] = this match {
+      case l: Left[E] => l
+      case Right(a) => Right(f(a))
+    }
+    
+    def flatMap[EE >: E, B](f: A => Either[EE, B]): Either[EE, B] = this match {
+      case l: Left[EE] => l
+      case Right(a) => f(a)
+    }
+    
+    def orElse[EE >: E, B >: A](b: Either[EE, B]): Either[EE, B] = this match {
+      case l: Left[EE] => b
+      case r: Right[B] => r
+    }
+    
+    def map2[EE >: E, B, C](b: Either[EE, B])(f: (A, B) => C): Either[EE, C] =
+      for {
+        x <- this
+        y <- b
+      } yield f(x,y)
+      
+  }
+  case class Left[+E](value: E) extends Either[E, Nothing]
+  case class Right[+A](value: A) extends Either[Nothing, A]
+
+  p( Right(1).map2(Right(2))(_ + _) )
+  p( Left("error").map2(Right(2))((x: Int, y:Int) => x + y) )
+  p( Right(1).map2(Left("error"))((x: Int, y:Int) => x + y) )
+  
+  // ex 4.7
+  
+  def sequence[E, A](es: List[Either[E, A]]): Either[E, List[A]] = es match {
+    case Nil => Right(Nil)
+    case ha :: tas => ha match {
+      case l: Left[E] => l
+      case Right(a) => sequence(tas) match {
+        case l: Left[E] => l
+        case Right(as) => Right(a :: as)
+      }
+    }
+  }
+  
+  p(sequence(List(Right(1),Right(2))))
+  p(sequence(List(Left("error"),Right(2))))
+  p(sequence(List(Right(1),Left("error"))))
+  p(sequence(List(Left("error1"),Left("error2"))))
+  
+  def traverse2[E, A, B](as: List[A])(f: A => Either[E, B]): Either[E, List[B]] = as match {
+    case Nil => Right(Nil)
+    case ha :: tas => f(ha) match {
+      case l: Left[E] => l
+      case Right(b) => traverse2(tas)(f) match {
+        case l: Left[E] => l
+        case Right(tb) => Right(b :: tb)
+      }
+    }
+  }
+  
+  
 }
