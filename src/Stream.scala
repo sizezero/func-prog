@@ -125,4 +125,49 @@ object Lazy extends App {
   p(fibs.take(7).toList)
   
   // ex 5.11
+  
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] =
+    f(z) match {
+      case None => Empty
+      case Some((a, s)) => Stream.cons(a, unfold(s)(f)) 
+    }
+
+  // ex 5.12
+  
+  def fibs2: Stream[Int] = {
+    def produce(s: (Int,Int)): Option[(Int,(Int,Int))] = {
+      val (last, prev) = s
+      val next = last + prev
+      Some(next,(prev,next))
+    }
+    Stream.cons(0, Stream.cons(1, unfold((0,1))(produce)))      
+  }
+  p(fibs2.take(7).toList)
+
+  def from2(n: Int): Stream[Int] = unfold(n)(s => Some((n, n+1)))
+  p(from2(9).take(3).toList)
+  
+  def constant2[A](a: A): Stream[A] = unfold(a)(s => Some((s,s)))
+  
+  def ones2: Stream[Int] = unfold(1)(s => Some(1,1))
+  p(ones2.take(3).toList)
+
+  // ex 5.13
+  
+  def map[A, B](as: Stream[A])(f: A => B): Stream[B] = unfold(as)(as => as match {
+    case Empty => None
+    case Cons(h, t) => Some( f(h()), t() )
+  })
+  p(map(Stream(1,2,3,4,5))(_+10).take(3).toList)
+  
+  def take[A](as: Stream[A])(n: Int) = unfold((as, n))(s => {
+    val (as2, n2) = s
+    as2 match {
+      case Cons(h, t) if (n2>0) => Some( (h(), (t(), n2-1)) )
+      case _ => None
+    } 
+  })
+  p(take(Stream(1,2,3,4,5))(3).toList)
+  
+  // sick of this...
 }
